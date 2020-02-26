@@ -1,0 +1,73 @@
+LJSliw 25.02.2020
+
+Q. What is the distribution of the data of the amount of eggs laid on plants vs the amount of larvae that survived?  (Eggs vs plant or visa versa)
+
+shapiro.test(Eggs$plant)
+Shapiro-Wilks normality test
+data: Eggs$plant
+W = 0.9334, p-value = 7.764e-05
+
+aov_residuals <- residuals(object = res.aov )
+shapiro.test(x = aov_residuals )
+
+Output:  Shapiro-Wilk normality test
+data: aov_residuals
+W = 0.96607, p-value = 0.4379
+
+Q. Is the distribution of Eggs laid on each plant per day or time a linear regression model? (ie. as time increases the amount of eggs increase?).
+plot(res.aov, 2)
+
+
+ANOVA (after the mean and standard deviation are calculated, using the same names for your data frame excel spreadsheet file as "data1" and the 'group' is the column title "plant"): Q. Is there a difference between eggs laid on any plant compared to any other plant?Note: Eggs could be number laid or number of larvae survived.... Or insects emerged etc.
+library(dplyr)
+group_by(data1, plant) %>%
+  summarise(
+    count = n(),
+    mean = mean(Eggs, na.rm = TRUE),
+    sd = sd(Eggs, na.rm = TRUE)
+  )
+
+if(!require(devtools)) install.packages("devtools")
+devtools::install_github("kassambara/ggpubr")
+install.packages("ggpubr") res.aov <- aov(Eggs ~ plant, data = data1)
+summary(res.aov)
+
+Your output should have this format:
+            Df Sum Sq Mean Sq F value Pr(>F)  
+group        2  3.766  1.8832   4.846 0.0159 *
+Residuals   27 10.492  0.3886                 
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+
+Reading the data output from R (ANOVA): https://www.instructables.com/id/Analysis-of-Variance-ANOVA-in-R/
+
+name=aov(y variable~x variable) #runs the ANOVA test.
+ ls(name)                        #lists the items stored by the test.
+ summary(name)                   #give the basic ANOVA output.name=aov(y~x1*x2*xn)           # Where * are each of the independent variables
+
+
+Q. Are there any differences of one plant to one of the other plants? (A. do a Tukey T test)
+TukeyHSD(res.aov)Where the output should look like this format:
+ Tukey multiple comparisons of means
+    95% family-wise confidence level
+Fit: aov(formula = weight ~ group, data = my_data)
+$group
+            diff        lwr       upr      p adj
+Sag-Apa -0.371 -1.0622161 0.3202161 0.3908711
+Apa-Cal   0.494 -0.1972161 1.1852161 0.1979960
+Cal-Sag  0.865  0.1737839 1.5562161 0.0120064
+
+Note: So this data has negative differences. These values are then squared to compare and find the means, to help calculate the percentage difference (mean differences) or proportion difference (standard deviation differences).Squaring the values helps make the numbers a 'positive' difference when comparing the number of Eggs on one plant vs the number of Eggs on another plant.
+
+
+Or Run the pairwise analysis Eg. To see the difference of the number of Eggs laid or larvae survived between each two plants.
+
+pairwise.t.test(data1$Eggs, data1$plant,
+                 p.adjust.method = "BH")
+
+The output should have the format like this:
+ Pairwise comparisons using t tests with pooled SD data: data1$Eggs and data1$plant Sag ApaApa 0.194 - Cal 0.132 0.013P value adjustment method: BH The result is a table of p-values for the pairwise comparisons. Here, the p-values have been adjusted by the Benjamini-Hochberg method.
+
+http://www.sthda.com/english/wiki/one-way-anova-test-in-r
+
